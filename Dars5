@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>بازی حافظه کودکان - طراحی: خانم نوربخش</title>
+<style>
+  body {
+    font-family: 'Tahoma', sans-serif;
+    background-color: #fff9c4; /* زرد پاستیلی */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px;
+  }
+
+  h1 {
+    color: #ff7043;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .game-board {
+    display: grid;
+    grid-template-columns: repeat(3, 150px);
+    grid-gap: 20px; /* فاصله بین کارت ها */
+    justify-content: center;
+  }
+
+  .card {
+    width: 150px;
+    height: 150px;
+    background-color: #ffb6c1; /* صورتی پاستیلی کم رنگ */
+    border: 3px solid #ff8fa3; /* کادر تیره‌تر */
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    text-align: left; /* متن چپ چین */
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    color: transparent; /* متن مخفی وقتی کارت بسته است */
+    padding: 10px;
+    word-wrap: break-word;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+  }
+
+  .card.flipped {
+    background-color: #ffdee1; /* صورتی روشن هنگام باز بودن */
+    color: #333; /* متن نمایان شود */
+  }
+
+  .card.matched {
+    background-color: #e5e4e2; /* رنگ کرومی */
+    color: #333;
+    cursor: default;
+    font-weight: bold;
+  }
+
+  .designer {
+    margin-top: 30px;
+    background-color: #ff8fa3;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: bold;
+  }
+
+  .end-message {
+    margin-top: 20px;
+    font-size: 18px;
+    color: #ff7043;
+    text-align: center;
+  }
+
+  .restart-btn {
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #ff7043;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+
+  .restart-btn:hover {
+    background-color: #ff8c66;
+  }
+</style>
+</head>
+<body>
+
+<h1>بازی حافظه: کلمات و معانی</h1>
+<div class="game-board" id="gameBoard"></div>
+<div class="end-message" id="endMessage"></div>
+<div class="designer">طراح: خانم نوربخش</div>
+
+<script>
+const cardPairs = [
+  { word: "وانگهی", meaning: "پس از آن" },
+  { word: "ناگهان", meaning: "یک دفعه" },
+  { word: "صاحب", meaning: "مالک" },
+  { word: "نصیحت", meaning: "پند" },
+  { word: "مزد", meaning: "پاداش" },
+  { word: "اتفاق", meaning: "حادثه" }
+];
+
+let cardsData = [];
+cardPairs.forEach((pair, index) => {
+  cardsData.push({ id: index * 2, text: pair.word, pairId: index * 2 + 1 });
+  cardsData.push({ id: index * 2 + 1, text: pair.meaning, pairId: index * 2 });
+});
+
+function shuffle(array) {
+  return array.sort(() => Math.random() - 0.5);
+}
+
+let gameBoard = document.getElementById('gameBoard');
+let endMessage = document.getElementById('endMessage');
+
+let firstCard = null;
+let secondCard = null;
+let lockBoard = false;
+let matchedCount = 0;
+
+function initGame() {
+  gameBoard.innerHTML = '';
+  endMessage.innerHTML = '';
+  firstCard = null;
+  secondCard = null;
+  lockBoard = false;
+  matchedCount = 0;
+
+  cardsData = shuffle(cardsData);
+
+  cardsData.forEach(cardData => {
+    const card = document.createElement('div');
+    card.classList.add('card');
+    card.dataset.id = cardData.id;
+    card.dataset.pairId = cardData.pairId;
+    card.innerText = cardData.text;
+    card.style.color = 'transparent';
+    card.addEventListener('click', () => flipCard(card));
+    gameBoard.appendChild(card);
+  });
+}
+
+function flipCard(card) {
+  if (lockBoard || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+
+  card.classList.add('flipped');
+  card.style.color = '#333';
+
+  if (!firstCard) {
+    firstCard = card;
+    return;
+  }
+
+  secondCard = card;
+  lockBoard = true;
+
+  checkForMatch();
+}
+
+function checkForMatch() {
+  if (firstCard.dataset.id == secondCard.dataset.pairId) {
+    firstCard.classList.add('matched');
+    secondCard.classList.add('matched');
+    matchedCount += 2;
+    resetBoard();
+    if (matchedCount === cardsData.length) {
+      showEndMessage();
+    }
+  } else {
+    setTimeout(() => {
+      firstCard.classList.remove('flipped');
+      secondCard.classList.remove('flipped');
+      firstCard.style.color = 'transparent';
+      secondCard.style.color = 'transparent';
+      resetBoard();
+    }, 5000);
+  }
+}
+
+function resetBoard() {
+  [firstCard, secondCard] = [null, null];
+  lockBoard = false;
+}
+
+function showEndMessage() {
+  endMessage.innerHTML = `آفرین! همه کارت‌ها درست شدند.<br>
+  اگر مایل هستید دوباره بازی کنید، روی دکمه زیر کلیک کنید:<br>
+  <button class="restart-btn" onclick="initGame()">بازی دوباره</button>`;
+}
+
+initGame();
+</script>
+
+</body>
+</html>
